@@ -12,6 +12,8 @@ class CollectionsController extends Pix_Controller
                 foreach ($condiction as $op => $value) {
                     if ($op == '$contains') {
                         $terms[] = $db->column_quote($k) . '@> ARRAY[' . $db->_pdo->quote($value) . ']';
+                    } elseif ($op == '$matches') {
+                        $terms[] = $db->column_quote($k) . " LIKE " . $db->_pdo->quote('%' . $value . '%');
                     } elseif ($op == '$gt') {
                         $terms[] = $db->column_quote($k) . " > " . $db->_pdo->quote($value);
                     } elseif ($op == '$lt') {
@@ -147,6 +149,25 @@ class CollectionsController extends Pix_Controller
                         unset($row[$k]);
                     }
                 }
+                $obj->entries[] = $row;
+            }
+            $obj->paging['count'] = count($obj->entries);
+            return $this->json($obj);
+        } elseif ('amendments' == $table) {
+
+            $limit = max(12, intval($_GET['l']));
+            $sql = sprintf(
+                "SELECT *"
+                . " FROM amendments "
+                . " WHERE %s LIMIT $limit"
+                , $this->getWhere(json_decode($_GET['q']))
+            );
+            $res = $db->query($sql);
+
+            $obj = new StdClass;
+            $obj->paging = array('count' => 0);
+            $obj->entries  = array();
+            while ($row = $res->fetch_assoc()) {
                 $obj->entries[] = $row;
             }
             $obj->paging['count'] = count($obj->entries);
