@@ -132,7 +132,7 @@ class CollectionsController extends Pix_Controller
                     header("HTTP/1.0 404 Not Found"); 
                     header('Access-Control-Allow-Origin: *');
                     header('Access-Control-Allow-Methods: GET');
-                    return $this->notfound();
+                    return $this->json(null);
                 }
                 return $this->json($obj->entries[0]);
             }
