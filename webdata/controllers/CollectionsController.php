@@ -8,10 +8,27 @@ class CollectionsController extends Pix_Controller
 
         $terms = array();
         foreach ($q as $k => $condiction) {
-            foreach ($condiction as $op => $value) {
-                if ($op == '$contains') {
-                    $terms[] = $db->column_quote($k) . '@> ARRAY[' . $db->_pdo->quote($value) . ']';
+            if (is_object($condiction)) {
+                foreach ($condiction as $op => $value) {
+                    if ($op == '$contains') {
+                        $terms[] = $db->column_quote($k) . '@> ARRAY[' . $db->_pdo->quote($value) . ']';
+                    } elseif ($op == '$gt') {
+                        $terms[] = $db->column_quote($k) . " > " . $db->_pdo->quote($value);
+                    } elseif ($op == '$lt') {
+                        $terms[] = $db->column_quote($k) . " < " . $db->_pdo->quote($value);
+                    } else {
+                        throw new Exception("unknown: " . json_encode($condiction));
+                    }
                 }
+            } elseif (is_numeric($condiction)) {
+                $terms[] = $db->column_quote($k) . ' = ' . intval($value);
+            } elseif (is_scalar($condiction)) {
+                $terms[] = $db->column_quote($k) . ' = ' . $db->_pdo->quote($value);
+            } elseif (is_null($condiction)) {
+                $terms[] = $db->column_quote($k) . ' IS NULL';
+
+            } else {
+                throw new Exception("unknown: " . json_encode($condiction));
             }
         }
         if (!$terms) {
@@ -74,11 +91,71 @@ class CollectionsController extends Pix_Controller
             }
             return $this->json($row);
         } elseif ('ttsmotions' == $table) {
-
             $sql = sprintf(
                 "SELECT "
                 . "tts_key,date,source,sitting_id,chair,motion_type,summary,resolution,progress,topic,category,tags,bill_refs,memo,agencies,speakers"
                 . " FROM ttsmotions "
+                . " WHERE %s"
+                , $this->getWhere(json_decode($_GET['q']))
+            );
+            $res = $db->query($sql);
+
+            $obj = new StdClass;
+            $obj->paging = array('count' => 0);
+            $obj->entries  = array();
+            while ($row = $res->fetch_assoc()) {
+                $obj->entries[] = $row;
+            }
+            $obj->paging['count'] = count($obj->entries);
+            return $this->json($obj);
+        } elseif ('sittings' == $table) {
+            $sql = sprintf(
+                "SELECT *"
+                . " FROM sittings"
+                . " WHERE %s"
+                , $this->getWhere(json_decode($_GET['q']))
+            );
+            $res = $db->query($sql);
+
+            $obj = new StdClass;
+            $obj->paging = array('count' => 0);
+            $obj->entries  = array();
+            while ($row = $res->fetch_assoc()) {
+                $obj->entries[] = $row;
+            }
+            $obj->paging['count'] = count($obj->entries);
+            return $this->json($obj);
+        } elseif ('ttsinterpellation' == $table) {
+            $limit = max(30, intval($_GET['l']));
+
+            $sql = sprintf(
+                "SELECT ARRAY_TO_JSON(asked_by) AS j_asked_by, source AS j_source, ARRAY_TO_JSON(category) AS j_category, ARRAY_TO_JSON(topic) AS j_topic, ARRAY_TO_JSON(keywords) AS j_keywords, answers AS j_answers"
+                . ", *"
+                . " FROM ttsinterpellation"
+                . " WHERE %s ORDER BY date_asked DESC LIMIT {$limit}"
+                , $this->getWhere(json_decode($_GET['q']))
+            );
+            $res = $db->query($sql);
+
+            $obj = new StdClass;
+            $obj->paging = array('count' => 0);
+            $obj->entries  = array();
+            while ($row = $res->fetch_assoc()) {
+                foreach ($row as $k => $v) {
+                    if (strpos($k, 'j_') === 0) {
+                        $row[substr($k, 2)] = json_decode($v);
+                        unset($row[$k]);
+                    }
+                }
+                $obj->entries[] = $row;
+            }
+            $obj->paging['count'] = count($obj->entries);
+            return $this->json($obj);
+        } elseif ('calendar' == $table) {
+
+            $sql = sprintf(
+                "SELECT *"
+                . " FROM calendar "
                 . " WHERE %s"
                 , $this->getWhere(json_decode($_GET['q']))
             );
