@@ -23,9 +23,9 @@ class CollectionsController extends Pix_Controller
                     }
                 }
             } elseif (is_numeric($condiction)) {
-                $terms[] = $db->column_quote($k) . ' = ' . intval($value);
+                $terms[] = $db->column_quote($k) . ' = ' . intval($condiction);
             } elseif (is_scalar($condiction)) {
-                $terms[] = $db->column_quote($k) . ' = ' . $db->_pdo->quote($value);
+                $terms[] = $db->column_quote($k) . ' = ' . $db->_pdo->quote($condiction);
             } elseif (is_null($condiction)) {
                 $terms[] = $db->column_quote($k) . ' IS NULL';
 
