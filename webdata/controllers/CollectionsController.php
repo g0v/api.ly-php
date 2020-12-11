@@ -76,6 +76,13 @@ class CollectionsController extends Pix_Controller
         list(, , , $table, $id, $key) = explode('/', $this->getURI());
         $db = Pix_Table::getDefaultDb();
         if ($table == 'bills' and $id) {
+            if (preg_match('#^\d+$#', $id)) {
+                $obj = json_decode(file_get_contents("https://aws.ronny.tw/ly/diff.php?billNo=" . urlencode($id)));
+                if ($key) {
+                    return $this->json($obj->{$key});
+                }
+                return $this->json($obj);
+            }
             $res = $db->query(sprintf(
                 "SELECT data, doc"
                 . ",bill_id,bill_ref,summary,proposed_by,abstract,report_of,reconsideration_of,bill_type,sitting_introduced"
