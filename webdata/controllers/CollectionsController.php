@@ -100,6 +100,10 @@ class CollectionsController extends Pix_Controller
             }
             return $this->json($row);
         } elseif ('ttsmotions' == $table) {
+            if (preg_match('#"\$contains":"(\d+)"#', $_GET['q'])) {
+                $obj = json_decode(file_get_contents("https://aws.ronny.tw/ly/ttsmotions.php?billNo=" . urlencode($id)));
+                return $this->json($obj);
+            }
             $sql = sprintf(
                 "SELECT "
                 . "tts_key,date,source,sitting_id,chair,motion_type,summary,resolution,progress,topic,category,tags,bill_refs,memo,agencies,speakers"
