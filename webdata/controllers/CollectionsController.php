@@ -100,7 +100,8 @@ class CollectionsController extends Pix_Controller
             }
             return $this->json($row);
         } elseif ('ttsmotions' == $table) {
-            if (preg_match('#"\$contains":"(\d+)"#', $_GET['q'])) {
+            if (preg_match('#"\$contains":"(\d+)"#', $_GET['q'], $matches)) {
+                $id = $matches[1];
                 $obj = json_decode(file_get_contents("https://aws.ronny.tw/ly/ttsmotions.php?billNo=" . urlencode($id)));
                 return $this->json($obj);
             }
