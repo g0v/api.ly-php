@@ -77,7 +77,7 @@ class CollectionsController extends Pix_Controller
         $db = Pix_Table::getDefaultDb();
         if ($table == 'bills' and $id) {
             if (preg_match('#^\d+$#', $id)) {
-                $obj = json_decode(file_get_contents("https://aws.ronny.tw/ly/diff.php?billNo=" . urlencode($id)));
+                $obj = json_decode(file_get_contents("https://openly.muyueh.com/api/bill/" . urlencode($id)));
                 if ($key) {
                     return $this->json($obj->{$key});
                 }
@@ -102,7 +102,7 @@ class CollectionsController extends Pix_Controller
         } elseif ('ttsmotions' == $table) {
             if (preg_match('#"\$contains":"(\d+)"#', $_GET['q'], $matches)) {
                 $id = $matches[1];
-                $obj = json_decode(file_get_contents("https://aws.ronny.tw/ly/ttsmotions.php?billNo=" . urlencode($id)));
+                $obj = json_decode(file_get_contents("https://openly.muyueh.com/api/ttsmotions/" . urlencode($id)));
                 return $this->json($obj);
             }
             $sql = sprintf(
